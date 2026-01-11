@@ -33,7 +33,7 @@ async function seedAdmin() {
         },
       });
       const { email } = await prisma.user.update({
-        where: { email: loggedUser.email },
+        where: { id: loggedUser.id },
         data: {
           email: loggedUser.email,
           name: loggedUser.name,
@@ -42,7 +42,7 @@ async function seedAdmin() {
 
       console.log(`Admin updated with email ${email}`);
     } else {
-      const { user: loggedUser } = await auth.api.signUpEmail({
+      await auth.api.signUpEmail({
         body: {
           email: user.email,
           password: user.password,
@@ -50,11 +50,12 @@ async function seedAdmin() {
         },
       });
 
-      const { email } = await prisma.user.create({
+      const { email } = await prisma.user.update({
+        where: {
+          email: user.email,
+        },
         data: {
-          email: loggedUser.email,
-          name: loggedUser.name,
-          id: loggedUser.id,
+          role: user.role as UserRole.ADMIN,
         },
       });
 

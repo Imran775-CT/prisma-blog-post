@@ -1,0 +1,42 @@
+[
+  {
+    "email": "ababilhossainupdated@gmail.com",
+    "role": "admin",
+    "id": "llyOKRksdNUKw9hJ3RKgbbll8DDFxkiy"
+  },
+  {
+    "email": "news@gmail.com",
+    "role": "admin",
+    "id": "44LQwuoXNJJVAOqy1MI4YHSjWpk2TwAp"
+  },
+  {
+    "email": "someone@gmail.com",
+    "role": "admin",
+    "id": "zkILEKqZj3oNVtQktI9DqtQSSw1tABSn"
+  },
+  {
+    "email": "testuser_1768113539@example.com",
+    "role": "user",
+    "id": "3ulkKCSaoIpHtd0eOPoxAzUpjR6bEF8V"
+  },
+  {
+    "email": "tester_1768113587@example.com",
+    "role": "user",
+    "id": "AkP1DCrrSgQ3DF9VSiQ4TgYywckZ9fWt"
+  },
+  {
+    "email": "test_1768114035161@example.com",
+    "role": "user",
+    "id": "eOjtN3DToGjgecYaXtJtk7jPakHrmqi0"
+  },
+  {
+    "email": "satarjday@example.com",
+    "role": "user",
+    "id": "3P8XJK1tDlT6ojdzahbVN07oJ3wfxnDB"
+  },
+  {
+    "email": "one@example.com",
+    "role": "user",
+    "id": "9uIX7eJjfxPZLjBuhc05Hy7ZtBVB8jvY"
+  }
+]
