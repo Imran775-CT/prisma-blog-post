@@ -1,0 +1,138 @@
+import { prisma } from "../../lib/prisma";
+import { Post, PostStatus } from "../../../generated/prisma/client";
+import { PostWhereInput } from "../../../generated/prisma/models";
+
+const createPost = async (
+  data: Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">,
+  userId: string
+) => {
+  const result = await prisma.post.create({
+    data: {
+      ...data,
+      authorId: userId,
+    },
+  });
+  return result;
+};
+
+const getAllPost = async ({
+  search,
+  tags,
+  isFeatured,
+  status,
+  authorId,
+}: {
+  search: string | undefined;
+  tags: string[] | [];
+  isFeatured: boolean | undefined;
+  status: PostStatus | undefined;
+  authorId: string | undefined;
+}) => {
+  const andConditions: PostWhereInput[] = [];
+
+  if (search) {
+    andConditions.push({
+      OR: [
+        {
+          title: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          content: {
+            contains: search,
+            mode: "insensitive",
+          },
+        },
+        {
+          tags: {
+            has: search,
+          },
+        },
+      ],
+    });
+  }
+
+  if (tags && tags.length > 0) {
+    andConditions.push({
+      tags: {
+        hasEvery: tags,
+      },
+    });
+  }
+
+  if (typeof isFeatured === "boolean") {
+    andConditions.push({
+      isFeatured,
+    });
+  }
+
+  if (status) {
+    andConditions.push({
+      status,
+    });
+  }
+
+  if (authorId) {
+    andConditions.push({
+      authorId,
+    });
+  }
+
+  const result = await prisma.post.findMany({
+    where: {
+      AND: andConditions,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      comments: true,
+    },
+  });
+  return result;
+};
+
+const getPostById = async (id: string) => {
+  const result = await prisma.post.findUnique({
+    where: { id },
+    include: {
+      comments: true,
+    },
+  });
+  return result;
+};
+
+const updatePost = async (
+  id: string,
+  data: Partial<Omit<Post, "id" | "createdAt" | "updatedAt" | "authorId">>,
+  userId: string
+) => {
+  const result = await prisma.post.update({
+    where: {
+      id,
+      authorId: userId,
+    },
+    data,
+  });
+  return result;
+};
+
+const deletePost = async (id: string, userId: string) => {
+  const result = await prisma.post.delete({
+    where: {
+      id,
+      authorId: userId,
+    },
+  });
+  return result;
+};
+
+export const PostService = {
+  createPost,
+  getAllPost,
+  getPostById,
+  updatePost,
+  deletePost,
+};
