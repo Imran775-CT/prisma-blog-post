@@ -37,6 +37,7 @@ async function seedAdmin() {
         data: {
           email: loggedUser.email,
           name: loggedUser.name,
+          role: user.role as UserRole.ADMIN,
         },
       });
 
