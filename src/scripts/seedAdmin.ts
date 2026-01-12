@@ -1,69 +1,60 @@
 import "dotenv/config";
-import { auth } from "../lib/auth";
 import { prisma } from "../lib/prisma";
 import { UserRole } from "../middlewares/auth";
-
-let user: {
-  name: string;
-  email: string;
-  password: string;
-  role?: UserRole.ADMIN;
-  emailVerified: boolean;
-  id?: string;
-} = {
-  email: process.env.ADMIN_EMAIL || "admin@gmail.com",
-  password: process.env.ADMIN_PASSWORD || "admin1234",
-  name: process.env.ADMIN_NAME || "Admin",
-  emailVerified: false,
-  role: UserRole.ADMIN,
-};
+import { auth } from "../lib/auth";
 
 async function seedAdmin() {
-  await prisma.$connect();
   try {
+    console.log("🚀 Admin seeding started...");
+
+    const adminData = {
+      name: "Admin X d Shaheb",
+      email: "admxdin@admin.com",
+      password: "admin1234",
+      role: UserRole.ADMIN,
+      emailVerified: true,
+    };
+
+    // check if admin already exists
     const existingUser = await prisma.user.findUnique({
-      where: { email: user.email },
+      where: {
+        email: adminData.email,
+      },
     });
 
+    console.log("🔍 Checking if admin exists...");
+
     if (existingUser) {
-      const { user: loggedUser } = await auth.api.signInEmail({
-        body: {
-          email: user.email,
-          password: user.password,
-        },
-      });
-      const { email } = await prisma.user.update({
-        where: { id: loggedUser.id },
-        data: {
-          email: loggedUser.email,
-          name: loggedUser.name,
-          role: user.role as UserRole.ADMIN,
-        },
-      });
-
-      console.log(`Admin updated with email ${email}`);
-    } else {
-      await auth.api.signUpEmail({
-        body: {
-          email: user.email,
-          password: user.password,
-          name: user.name,
-        },
-      });
-
-      const { email } = await prisma.user.update({
-        where: {
-          email: user.email,
-        },
-        data: {
-          role: user.role as UserRole.ADMIN,
-        },
-      });
-
-      console.log(`New Admin created with email ${email}`);
+      console.log("⚠️ Admin already exists. Skipping seed.");
+      return;
     }
-  } catch (err) {
-    console.log(err);
+
+    // create user using auth api
+    await auth.api.signUpEmail({
+      body: {
+        email: adminData.email,
+        password: adminData.password,
+        name: adminData.name,
+      },
+    });
+
+    console.log("✅ Admin account created via auth");
+
+    // update role & email verification
+    const updatedUser = await prisma.user.update({
+      where: {
+        email: adminData.email,
+      },
+      data: {
+        role: adminData.role,
+        emailVerified: adminData.emailVerified,
+      },
+    });
+
+    console.log("🎯 Admin role & email verified successfully");
+    console.log("👤 Seeded Admin:", updatedUser);
+  } catch (error) {
+    console.error("❌ Error while seeding admin:", error);
   } finally {
     await prisma.$disconnect();
   }

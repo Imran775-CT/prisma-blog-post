@@ -8,9 +8,9 @@ const router = express.Router();
 
 
 
-router.post("/", auth(UserRole.ADMIN, UserRole.USER), PostController.createPost);
+router.post("/", auth(UserRole.USER), PostController.createPost);
 router.get("/", PostController.getAllPost);
-router.get("/:id", PostController.getSinglePost);
+router.get("/:postId", PostController.getSinglePost);
 router.patch("/:id", auth(UserRole.ADMIN, UserRole.USER), PostController.updatePost);
 router.delete("/:id", auth(UserRole.ADMIN, UserRole.USER), PostController.deletePost);
 
