@@ -8,9 +8,9 @@ async function seedAdmin() {
     console.log("🚀 Admin seeding started...");
 
     const adminData = {
-      name: "Admin X d Shaheb",
-      email: "admxdin@admin.com",
-      password: "admin1234",
+      name: "next",
+      email: "next@example.com",
+      password: "12345678",
       role: UserRole.ADMIN,
       emailVerified: true,
     };
@@ -24,21 +24,17 @@ async function seedAdmin() {
 
     console.log("🔍 Checking if admin exists...");
 
-    if (existingUser) {
-      console.log("⚠️ Admin already exists. Skipping seed.");
-      return;
+    if (!existingUser) {
+      await auth.api.signUpEmail({
+        body: {
+          email: adminData.email,
+          password: adminData.password,
+          name: adminData.name,
+        },
+      });
+    } else {
+      console.log("🔍 User found, proceeding to update role...");
     }
-
-    // create user using auth api
-    await auth.api.signUpEmail({
-      body: {
-        email: adminData.email,
-        password: adminData.password,
-        name: adminData.name,
-      },
-    });
-
-    console.log("✅ Admin account created via auth");
 
     // update role & email verification
     const updatedUser = await prisma.user.update({

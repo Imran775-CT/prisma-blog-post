@@ -14,7 +14,7 @@ declare global {
         id: string;
         email: string;
         name: string;
-        role: string[];
+        role: string;
         emailVerified: boolean;
       };
     }
@@ -37,9 +37,10 @@ const auth = (...roles: UserRole[]) => {
         id: session.user.id,
         email: session.user.email,
         name: session.user.name,
-        role: [session.user.role] as string[],
+        role: session.user.role as string,
         emailVerified: session.user.emailVerified,
       };
+      // console.log(req.user.role);
       if (roles.length && !roles.includes(session.user.role as UserRole)) {
         return res.status(403).json({
           message:

@@ -1,38 +1,30 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { PostService } from "./post.service";
 
-import { PostValidation } from "./post.validation";
-import { PostStatus } from "../../../generated/prisma/enums";
+import { PostStatus } from "../../../generated/prisma";
 import paginationSortingHelper, {
   IOptionsResult,
 } from "../../helpers/paginationSortingHelper";
+import { UserRole } from "../../middlewares/auth";
 
-const createPost = async (req: Request, res: Response) => {
+const createPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const validatedData = PostValidation.createPostValidationSchema.parse(
-      req.body
-    );
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
-    const result = await PostService.createPost(validatedData as any, userId);
+    const result = await PostService.createPost(req.body, userId);
     res.status(201).json({
       success: true,
       message: "Post created successfully",
       data: result,
     });
   } catch (error: any) {
-    res.status(400).json({
-      success: false,
-      message:
-        error.name === "ZodError" ? "Validation Error" : "Post creation failed",
-      error: error.name === "ZodError" ? error.errors : "Internal server error",
-    });
+    next(error);
   }
 };
 
-const getAllPost = async (req: Request, res: Response) => {
+const getAllPost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { search } = req.query;
     const searchStr = typeof search === "string" ? String(search) : undefined;
@@ -70,16 +62,12 @@ const getAllPost = async (req: Request, res: Response) => {
       length: result.data.length,
       data: result,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: "Fetching posts failed",
-    });
+  } catch (error: any) {
+    next(error);
   }
 };
 
-const getSinglePost = async (req: Request, res: Response) => {
+const getSinglePost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { postId } = req.params;
     if (!postId) {
@@ -96,30 +84,44 @@ const getSinglePost = async (req: Request, res: Response) => {
       message: "Post fetched successfully",
       data: result,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: "Fetching post failed",
-    });
+  } catch (error: any) {
+    next(error);
   }
 };
 
-const updatePost = async (req: Request, res: Response) => {
+const getMyPosts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const user = req.user;
+    console.log("User Data:", user);
+    if (!user) {
+      throw new Error("You are unauthorized!");
+    }
+    const result = await PostService.getMyPosts(user.id);
+    res.status(200).json(result);
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+//***
+///** user -> sudhu nijer post update korte parbe , isFeatured update korte parbe  NA...!
+///** admin -> post update korte parbe and isFeatured O update korte parbe ...> */
+
+const updatePost = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { postId } = req.params;
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
 
-    const validatedData = PostValidation.updatePostValidationSchema.parse(
-      req.body
-    );
+    const isAdmin = req.user?.role === UserRole.ADMIN;
+
     const result = await PostService.updatePost(
-      id as string,
-      validatedData as any,
-      userId
+      postId as string,
+      req.body,
+      userId,
+      isAdmin
     );
 
     res.status(200).json({
@@ -128,38 +130,40 @@ const updatePost = async (req: Request, res: Response) => {
       data: result,
     });
   } catch (error: any) {
-    const status = error.name === "ZodError" ? 400 : 500;
-    res.status(status).json({
-      success: false,
-      message:
-        error.name === "ZodError" ? "Validation Error" : "Post update failed",
-      error:
-        error.name === "ZodError"
-          ? error.errors
-          : "Internal server error (Ensure you are the author)",
-    });
+    next(error);
   }
 };
 
-const deletePost = async (req: Request, res: Response) => {
+const deletePost = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const userId = req.user?.id;
     if (!userId) {
       return res.status(401).json({ success: false, message: "Unauthorized" });
     }
+    const isAdmin = req.user?.role === UserRole.ADMIN;
 
-    await PostService.deletePost(id as string, userId);
+    const result = await PostService.deletePost(id as string, userId, isAdmin);
     res.status(200).json({
       success: true,
       message: "Post deleted successfully",
+      data: result,
     });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: "Internal server error",
-      error: "Post deletion failed (Ensure you are the author)",
+  } catch (error: any) {
+    next(error);
+  }
+};
+
+const getStats = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const result = await PostService.getStats();
+    res.status(200).json({
+      success: true,
+      message: "Post Stats successfully",
+      data: result,
     });
+  } catch (error: any) {
+    next(error);
   }
 };
 
@@ -167,6 +171,8 @@ export const PostController = {
   createPost,
   getAllPost,
   getSinglePost,
+  getMyPosts,
   updatePost,
   deletePost,
+  getStats,
 };
